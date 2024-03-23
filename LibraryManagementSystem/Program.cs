@@ -2,6 +2,8 @@
 
 namespace LibraryManagementSystem
 {
+
+
 	internal class Program
 	{
 		static void Main(string[] args)
@@ -16,7 +18,6 @@ namespace LibraryManagementSystem
 			connection.Open();
 			Console.WriteLine("Connection Established");
 			
-
 			///
 			while(true)
 			{
@@ -30,9 +31,10 @@ namespace LibraryManagementSystem
 					case 2: var member = new CRUD_Member(connection);
 							member.DisplayMenu();
 							break;
-					case 3:	break;
-					case 4:
-							connection.Close();
+					case 3:	var borrow = new Borrower(connection);
+							borrow.DisplayMenu();
+							break;
+					case 4:	connection.Close();
 							Environment.Exit(0);
 							break;
 					default: Console.WriteLine("enter valid choice");

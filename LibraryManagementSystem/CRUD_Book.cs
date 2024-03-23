@@ -1,4 +1,5 @@
 ﻿using Microsoft.Data.SqlClient;
+using System.Net;
 using System.Reflection.PortableExecutable;
 using System.Text;
 
@@ -46,6 +47,7 @@ namespace LibraryManagementSystem
             }
 		}
 
+
 		private void AddBookToDb()
 		{
 			do
@@ -74,30 +76,23 @@ namespace LibraryManagementSystem
 		private void UpdateBook()
 		{
 			int bookId = 0;
-			bool flag=true;
-			SqlDataReader reader;
+			//first check rows exists
+			var getQuery = "SELECT * FROM books";
+			SqlCommand GetCommand = new SqlCommand(getQuery, ConnectionObj);
+			SqlDataReader dataReader = GetCommand.ExecuteReader();
+			if (!dataReader.HasRows)
+			{
+				dataReader.Close();
+                Console.WriteLine("NO RECORDS IN DB");
+				return;
+            }
+			dataReader.Close();
 			do
 			{
 				Console.WriteLine("Enter valid book ID to Update");
 				bookId = Convert.ToInt32(Console.ReadLine());
 
-				//get book from db
-				var GetQuery = $"SELECT id from books b WHERE b.id = {bookId}";
-
-				SqlCommand sqlCommand = new SqlCommand(GetQuery, ConnectionObj);
-
-				//used using statement as the dataReader needs to be closed after it's usage
-				//or reader.Close(); can also be used
-				using(reader = sqlCommand.ExecuteReader())
-				
-				if (!reader.HasRows)
-				{
-                    Console.WriteLine("Book ID:{0} doesn't exists",bookId);
-                }
-				else
-					flag=false;
-
-			} while (flag);
+			} while (CheckBook(bookId));
 
 			//get data for update operation
 			do
@@ -117,34 +112,27 @@ namespace LibraryManagementSystem
 			var updateQuery = $"UPDATE books SET title = '{Title}', author = '{Author}', availableCopies = '{copies}' WHERE id = {bookId}";
 			SqlCommand UpdateCommand = new SqlCommand(updateQuery, ConnectionObj);
 			UpdateCommand.ExecuteNonQuery();
-            Console.WriteLine("Book ID: {0} details updated",bookId);
-        }
+			Console.WriteLine("Book ID: {0} details updated", bookId);
+		}
 
 		private void DeleteBook()
 		{
 			int bookId;
-			bool flag=true;
+			var getQuery = "SELECT * FROM books";
+			SqlCommand GetCommand = new SqlCommand(getQuery, ConnectionObj);
+			SqlDataReader dataReader = GetCommand.ExecuteReader();
+			if (!dataReader.HasRows)
+			{
+				dataReader.Close();
+				Console.WriteLine("NO RECORDS IN DB");
+				return;
+			}
+			dataReader.Close();
 			do
 			{
                 Console.WriteLine("enter valid book ID to delete");
 				bookId = Convert.ToInt32(Console.ReadLine());
-
-				//write query and convert it to sql command
-				var getQuery = $"SELECT id from books WHERE id = {bookId}";
-				SqlCommand sqlCommand = new SqlCommand(getQuery, ConnectionObj);
-
-				//get record from db
-				SqlDataReader reader = sqlCommand.ExecuteReader();
-				if (!reader.HasRows)
-				{
-					Console.WriteLine("Book Id:{0} doesn't exist",bookId);
-				}
-				else
-				{
-					flag = false;
-				}
-				reader.Close();
-            }while(flag);
+            }while(CheckBook(bookId));
 
 			//perform delete query
 			var DeleteQuery = $"DELETE FROM books WHERE id = {bookId}";
@@ -153,7 +141,27 @@ namespace LibraryManagementSystem
             Console.WriteLine("Book ID: {0} successfully deleted !!",bookId);
         }
 
-		private void DisplayAllBooks()
+		public bool CheckBook(int bookId)
+		{
+			//get book from db
+			var GetQuery = $"SELECT id from books b WHERE b.id = {bookId}";
+			SqlCommand sqlCommand = new SqlCommand(GetQuery, ConnectionObj);
+
+			SqlDataReader reader = sqlCommand.ExecuteReader();
+			if (!reader.HasRows)
+			{
+				reader.Close();
+				Console.WriteLine("Book ID:{0} doesn't exists", bookId);
+				return true;
+			}
+			else
+			{
+				reader.Close();
+				return false;
+			}
+		}
+
+		public void DisplayAllBooks()
 		{
 			//query
 			var GetQuery = $"SELECT * FROM books";
@@ -174,7 +182,9 @@ namespace LibraryManagementSystem
 				while (sqlDataReader.Read())
 				{
 					sl += 1;
-					stringBuilder.Append($"{sl}:Book Title:{sqlDataReader.GetValue(1)}")
+					stringBuilder.Append($"Book ID: {sqlDataReader.GetValue(0)}")
+								.AppendLine()
+								.Append($"{sl}:Book Title:{sqlDataReader.GetValue(1)}")
 								.AppendLine()
 								.Append($"Author: {sqlDataReader.GetValue(2)}")
 								.AppendLine()

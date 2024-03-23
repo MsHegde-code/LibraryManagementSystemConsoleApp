@@ -59,6 +59,16 @@ namespace LibraryManagementSystem
 		{
 			int memberId;
 			bool flag = true;
+			var getQuery = "SELECT * FROM members";
+			SqlCommand GetCommand = new SqlCommand(getQuery, _connection);
+			SqlDataReader dataReader = GetCommand.ExecuteReader();
+			if (!dataReader.HasRows)
+			{
+				dataReader.Close();
+				Console.WriteLine("NO RECORDS IN DB");
+				return;
+			}
+			dataReader.Close();
 			do
 			{
                 Console.WriteLine("Enter valid member ID to Update");
@@ -84,12 +94,12 @@ namespace LibraryManagementSystem
 			{
 				Console.WriteLine("Enter member name <25 chars");
 				Name = Console.ReadLine();
-			} while (string.IsNullOrEmpty(Name) || Name.Length > 25);
+			} while (string.IsNullOrEmpty(Name) || Name.Length > 25);//get name
 			do
 			{
 				Console.WriteLine("Enter valid phone number");
 				Phone = Console.ReadLine();
-			} while (string.IsNullOrEmpty(Phone) || Phone.Length < 10 || Phone.Length > 10);
+			} while (string.IsNullOrEmpty(Phone) || Phone.Length < 10 || Phone.Length > 10);//get phone
 
 			var UpdateQuery = $"UPDATE members SET name = '{Name}', phone = '{Phone}' WHERE id = {memberId}";
 			SqlCommand sqlCommand = new SqlCommand(UpdateQuery, _connection);
@@ -100,6 +110,16 @@ namespace LibraryManagementSystem
 		private void DeleteMember()
 		{
 			int memberId; bool flag = true;
+			var getQuery = "SELECT * FROM members";
+			SqlCommand GetCommand = new SqlCommand(getQuery, _connection);
+			SqlDataReader dataReader = GetCommand.ExecuteReader();
+			if (!dataReader.HasRows)
+			{
+				dataReader.Close();
+				Console.WriteLine("NO RECORDS IN DB");
+				return;
+			}
+			dataReader.Close();
 			do
 			{
                 Console.WriteLine("Enter valid member Id to delete");
@@ -118,7 +138,7 @@ namespace LibraryManagementSystem
 					flag = false;
 				}
 				reader.Close();
-            } while (flag);
+            } while (flag);//get valid member id
 
 			//delete operation
 			var DeleteQuery = $"DELETE from members WHERE id = {memberId}";
@@ -127,6 +147,26 @@ namespace LibraryManagementSystem
 			Console.WriteLine("Member ID: {0} successfully deleted",memberId);
 		}
 
+		public bool CheckMember(int Mid)
+		{
+
+			var getQuery = $"SELECT id FROM members WHERE id = {Mid}";
+			SqlCommand sqlCommand = new SqlCommand(getQuery, _connection);
+			SqlDataReader reader = sqlCommand.ExecuteReader();
+
+			if (!reader.HasRows)
+			{
+				reader.Close();
+				Console.WriteLine("Member ID:{0} doesn't exists", Mid);
+				return true; //and continue in loop at calling statement
+			}
+			else
+			{
+				reader.Close();
+				return false;
+			}
+
+		}
 		private void DisplayAllMembers()
 		{
 			var GetAllQuery = $"SELECT * FROM members";
