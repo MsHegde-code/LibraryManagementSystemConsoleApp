@@ -7,14 +7,14 @@ namespace LibraryManagementSystem
 {
 	public class CRUD_Book
 	{
-        private string Title { get; set; }
-        private string Author { get; set; }
-		private SqlConnection ConnectionObj;
+        private string? Title { get; set; }
+        private string? Author { get; set; }
+		private readonly SqlConnection _connection;
 
 
-        public CRUD_Book(SqlConnection ConnectionObj)
+        public CRUD_Book(SqlConnection connection)
         {
-			this.ConnectionObj = ConnectionObj;
+			_connection = connection;
         }
 
 
@@ -67,7 +67,7 @@ namespace LibraryManagementSystem
             var query = $"INSERT INTO books(title,author,availableCopies) VALUES ('{Title}','{Author}','{copies}')";
 
 			//sql command is used to convert the query to the DML command for this db
-			SqlCommand sqlCommand = new SqlCommand(query, ConnectionObj);
+			SqlCommand sqlCommand = new SqlCommand(query, _connection);
 			sqlCommand.ExecuteNonQuery();
             Console.WriteLine("Book: {0} added to DB",Title);
 
@@ -78,7 +78,7 @@ namespace LibraryManagementSystem
 			int bookId = 0;
 			//first check rows exists
 			var getQuery = "SELECT * FROM books";
-			SqlCommand GetCommand = new SqlCommand(getQuery, ConnectionObj);
+			SqlCommand GetCommand = new SqlCommand(getQuery, _connection);
 			SqlDataReader dataReader = GetCommand.ExecuteReader();
 			if (!dataReader.HasRows)
 			{
@@ -110,7 +110,7 @@ namespace LibraryManagementSystem
 			int copies = Convert.ToInt32(Console.ReadLine());
 
 			var updateQuery = $"UPDATE books SET title = '{Title}', author = '{Author}', availableCopies = '{copies}' WHERE id = {bookId}";
-			SqlCommand UpdateCommand = new SqlCommand(updateQuery, ConnectionObj);
+			SqlCommand UpdateCommand = new SqlCommand(updateQuery, _connection);
 			UpdateCommand.ExecuteNonQuery();
 			Console.WriteLine("Book ID: {0} details updated", bookId);
 		}
@@ -119,7 +119,7 @@ namespace LibraryManagementSystem
 		{
 			int bookId;
 			var getQuery = "SELECT * FROM books";
-			SqlCommand GetCommand = new SqlCommand(getQuery, ConnectionObj);
+			SqlCommand GetCommand = new SqlCommand(getQuery, _connection);
 			SqlDataReader dataReader = GetCommand.ExecuteReader();
 			if (!dataReader.HasRows)
 			{
@@ -136,7 +136,7 @@ namespace LibraryManagementSystem
 
 			//perform delete query
 			var DeleteQuery = $"DELETE FROM books WHERE id = {bookId}";
-			SqlCommand DeleteCommand = new SqlCommand(DeleteQuery, ConnectionObj);
+			SqlCommand DeleteCommand = new SqlCommand(DeleteQuery, _connection);
 			DeleteCommand.ExecuteNonQuery();
             Console.WriteLine("Book ID: {0} successfully deleted !!",bookId);
         }
@@ -145,7 +145,7 @@ namespace LibraryManagementSystem
 		{
 			//get book from db
 			var GetQuery = $"SELECT id from books b WHERE b.id = {bookId}";
-			SqlCommand sqlCommand = new SqlCommand(GetQuery, ConnectionObj);
+			SqlCommand sqlCommand = new SqlCommand(GetQuery, _connection);
 
 			SqlDataReader reader = sqlCommand.ExecuteReader();
 			if (!reader.HasRows)
@@ -165,7 +165,7 @@ namespace LibraryManagementSystem
 		{
 			//query
 			var GetQuery = $"SELECT * FROM books";
-			SqlCommand GetCommand = new SqlCommand(GetQuery, ConnectionObj);
+			SqlCommand GetCommand = new SqlCommand(GetQuery, _connection);
 
 			SqlDataReader sqlDataReader = GetCommand.ExecuteReader();
 
