@@ -36,25 +36,27 @@ namespace LibraryManagementSystem
 				}
             }
 		}
+		private void GetDetails()
+		{
+            do
+            {
+                Console.WriteLine("Enter member name (under 20 characters)");
+                Name = Console.ReadLine();
+            } while (string.IsNullOrEmpty(Name) || Name.Length > 20);
+            do
+            {
+                Console.WriteLine("Enter valid phone number");
+                Phone = Console.ReadLine();
+            } while (string.IsNullOrEmpty(Phone) || Phone.Length < 10 || Phone.Length > 10);
+        }
 		private void AddNewMember()
 		{
-			do
-			{
-				Console.WriteLine("Enter member name <25 chars");
-				Name = Console.ReadLine();
-			} while (string.IsNullOrEmpty(Name) || Name.Length > 25);
-			do
-			{
-				Console.WriteLine("Enter valid phone number");
-				Phone = Console.ReadLine();
-			}while(string.IsNullOrEmpty(Phone) || Phone.Length < 10 || Phone.Length >10);
-
+			GetDetails();
 			var AddQuery = $"INSERT INTO members(name, phone) VALUES ('{Name}','{Phone}')";
 			SqlCommand sqlCommand = new SqlCommand(AddQuery, _connection);
 			sqlCommand.ExecuteNonQuery();
             Console.WriteLine("Member: {0} Added to Db",Name);
         }
-		
 		private void UpdateMember()
 		{
 			int memberId;
@@ -65,7 +67,7 @@ namespace LibraryManagementSystem
 			if (!dataReader.HasRows)
 			{
 				dataReader.Close();
-				Console.WriteLine("NO RECORDS IN DB");
+				Console.WriteLine("NO ACTIVE MEMBERS IN LIBRARY\n");
 				return;
 			}
 			dataReader.Close();
@@ -73,40 +75,14 @@ namespace LibraryManagementSystem
 			{
                 Console.WriteLine("Enter valid member ID to Update");
 				memberId = Convert.ToInt32(Console.ReadLine());
+			} while (CheckMember(memberId));
 
-				var GetQuery = $"SELECT id from members WHERE id = {memberId}";
-				SqlCommand getCommand = new SqlCommand(GetQuery, _connection);
-				SqlDataReader reader = getCommand.ExecuteReader();
-
-				if (!reader.HasRows)
-				{
-                    Console.WriteLine("Member Id: {0} doesn't exists",memberId);
-                }
-				else
-				{
-					flag = false;
-				}
-				reader.Close();
-			} while (flag);
-
-			//perform update 
-			do
-			{
-				Console.WriteLine("Enter member name <25 chars");
-				Name = Console.ReadLine();
-			} while (string.IsNullOrEmpty(Name) || Name.Length > 25);//get name
-			do
-			{
-				Console.WriteLine("Enter valid phone number");
-				Phone = Console.ReadLine();
-			} while (string.IsNullOrEmpty(Phone) || Phone.Length < 10 || Phone.Length > 10);//get phone
-
+			GetDetails();
 			var UpdateQuery = $"UPDATE members SET name = '{Name}', phone = '{Phone}' WHERE id = {memberId}";
 			SqlCommand sqlCommand = new SqlCommand(UpdateQuery, _connection);
 			sqlCommand.ExecuteNonQuery();
 			Console.WriteLine("Member ID: {0} updated Successfully", memberId);
 		}
-
 		private void DeleteMember()
 		{
 			int memberId; bool flag = true;
@@ -116,7 +92,7 @@ namespace LibraryManagementSystem
 			if (!dataReader.HasRows)
 			{
 				dataReader.Close();
-				Console.WriteLine("NO RECORDS IN DB");
+				Console.WriteLine("NO ACTIVE MEMBERS IN LIBRARY\n");
 				return;
 			}
 			dataReader.Close();
@@ -124,21 +100,7 @@ namespace LibraryManagementSystem
 			{
                 Console.WriteLine("Enter valid member Id to delete");
 				memberId = Convert.ToInt32(Console.ReadLine());
-
-				var GetQuery = $"SELECT id from members WHERE id = {memberId}";
-				SqlCommand getCommand = new SqlCommand(GetQuery, _connection);
-				SqlDataReader reader = getCommand.ExecuteReader();
-
-				if (!reader.HasRows)
-				{
-                    Console.WriteLine("Member Id: {0} doesn't exists", memberId);
-                }
-				else
-				{
-					flag = false;
-				}
-				reader.Close();
-            } while (flag);//get valid member id
+            } while (CheckMember(memberId));//get valid member id
 
 			//delete operation
 			var DeleteQuery = $"DELETE from members WHERE id = {memberId}";
@@ -146,7 +108,6 @@ namespace LibraryManagementSystem
 			sqlCommand.ExecuteNonQuery();
 			Console.WriteLine("Member ID: {0} successfully deleted",memberId);
 		}
-
 		public bool CheckMember(int Mid)
 		{
 
@@ -177,7 +138,7 @@ namespace LibraryManagementSystem
 
 			if (!reader.HasRows)
 			{
-				Console.WriteLine("NO RECORDS IN DB\n");
+				Console.WriteLine("NO ACTIVE MEMBERS IN LIBRARY\n");
 			}
 			else
 			{

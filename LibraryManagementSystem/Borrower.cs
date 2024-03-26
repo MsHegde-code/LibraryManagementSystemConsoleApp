@@ -173,53 +173,66 @@ namespace LibraryManagementSystem
 
 		private void DisplayBorrowed()
 		{
-			//get members id
-			var getQuery = $"SELECT member_Id FROM borrowed";
-			SqlCommand getCommand = new SqlCommand(getQuery, _connection);
-			SqlDataReader reader = getCommand.ExecuteReader();
-
-			var membersList = new List<int>();
-			while(reader.Read())
+			var checkBorrowedRecords = $"SELECT COUNT(*) FROM {Configure.BorrowedTable}";
+			SqlCommand checkCommand = new SqlCommand(checkBorrowedRecords, _connection);
+			int count = Convert.ToInt32(checkCommand.ExecuteScalar());
+			if (count == 0)
 			{
-				member_Id = Convert.ToInt32(reader.GetValue(0));
-				//add unique
-				if(!membersList.Contains(member_Id))
-					membersList.Add(member_Id);
-            }
-			reader.Close();
-
-			int sl = 0;
-			//get books for each member
-			StringBuilder stringBuilder = new StringBuilder();
-			foreach (var mid in membersList)
-			{
-				var borrowQuery = $"SELECT title, book_Id FROM books AS B, borrowed WHERE B.id = book_Id AND member_Id = '{mid}'";
-
-				SqlCommand BorrowCommand = new SqlCommand(borrowQuery, _connection);
-				SqlDataReader sqlData = BorrowCommand.ExecuteReader();
-
-				
-				sl += 1;
-				stringBuilder.Append($"{sl}. Member ID: {mid}")
-					.AppendLine()
-					.Append($"Borrowed Books")
-					.AppendLine();
-
-				//print book id and title for each member id
-				while (sqlData.Read())
-				{
-					stringBuilder.Append($"Book Title: {sqlData.GetValue(0)}")
-					.Append(" : ")
-					.Append($"Book ID: {sqlData.GetValue(1)}")
-					.AppendLine();
-				}
-				stringBuilder.AppendLine()
-					.Append("-- ** --")
-					.AppendLine();
-				sqlData.Close();
-				
+				//no records
+				Console.WriteLine("NO BOOKS BORROWED FROM LIBRARY");
 			}
-			Console.WriteLine(stringBuilder.ToString());
+			else
+			{
+                //get members id
+                var getQuery = $"SELECT member_Id FROM borrowed";
+                SqlCommand getCommand = new SqlCommand(getQuery, _connection);
+                SqlDataReader reader = getCommand.ExecuteReader();
+
+                var membersList = new List<int>();
+                while (reader.Read())
+                {
+                    member_Id = Convert.ToInt32(reader.GetValue(0));
+                    //add unique
+                    if (!membersList.Contains(member_Id))
+                        membersList.Add(member_Id);
+                }
+                reader.Close();
+
+                int sl = 0;
+                //get books for each member
+                StringBuilder stringBuilder = new StringBuilder();
+                foreach (var mid in membersList)
+                {
+                    var borrowQuery = $"SELECT title, book_Id FROM books AS B, borrowed WHERE B.id = book_Id AND member_Id = '{mid}'";
+
+                    SqlCommand BorrowCommand = new SqlCommand(borrowQuery, _connection);
+                    SqlDataReader sqlData = BorrowCommand.ExecuteReader();
+
+
+                    sl += 1;
+                    stringBuilder.Append($"{sl}. Member ID: {mid}")
+                        .AppendLine()
+                        .Append($"Borrowed Books")
+                        .AppendLine();
+
+                    //print book id and title for each member id
+                    while (sqlData.Read())
+                    {
+                        stringBuilder.Append($"Book Title: {sqlData.GetValue(0)}")
+                        .Append(" : ")
+                        .Append($"Book ID: {sqlData.GetValue(1)}")
+                        .AppendLine();
+                    }
+                    stringBuilder.AppendLine()
+                        .Append("-- ** --")
+                        .AppendLine();
+                    sqlData.Close();
+
+                }
+                Console.WriteLine(stringBuilder.ToString());
+            }
+
+			
 		}
 
 	}

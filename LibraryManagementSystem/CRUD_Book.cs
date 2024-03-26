@@ -9,7 +9,9 @@ namespace LibraryManagementSystem
 	{
         private string? Title { get; set; }
         private string? Author { get; set; }
-		private readonly SqlConnection _connection;
+
+        private int Copies { get; set; }
+        private readonly SqlConnection _connection;
 
 
         public CRUD_Book(SqlConnection connection)
@@ -47,29 +49,32 @@ namespace LibraryManagementSystem
             }
 		}
 
+		private void GetDetails()
+		{
+            do
+            {
+                Console.WriteLine("Enter valid book title (under 20 characters)");
+                Title = Console.ReadLine();
+            } while (string.IsNullOrEmpty(Title) || Title.Length > 20);
+            do
+            {
+                Console.WriteLine("Enter valid book author (under 20 characters)");
+                Author = Console.ReadLine();
+            } while (string.IsNullOrEmpty(Author) || Author.Length > 20);
+
+            Console.WriteLine("Enter the available copies");
+            Copies = Convert.ToInt32(Console.ReadLine());
+        }
 
 		private void AddBookToDb()
 		{
-			do
-			{
-				Console.WriteLine("Enter valid book title < 20 chars");
-				Title = Console.ReadLine();
-			} while (string.IsNullOrEmpty(Title) || Title.Length > 20);
-			do
-			{
-				Console.WriteLine("Enter valid book author < 20 chars");
-				Author = Console.ReadLine();
-			} while (string.IsNullOrEmpty(Author) || Author.Length > 20);
-
-            Console.WriteLine("Enter the available copies");
-			int copies = Convert.ToInt32(Console.ReadLine());
-
-            var query = $"INSERT INTO books(title,author,availableCopies) VALUES ('{Title}','{Author}','{copies}')";
+			GetDetails();
+            var query = $"INSERT INTO books(title,author,availableCopies) VALUES ('{Title}','{Author}','{Copies}')";
 
 			//sql command is used to convert the query to the DML command for this db
 			SqlCommand sqlCommand = new SqlCommand(query, _connection);
 			sqlCommand.ExecuteNonQuery();
-            Console.WriteLine("Book: {0} added to DB",Title);
+            Console.WriteLine("Book: {0} added to Library",Title);
 
         }
 
@@ -83,7 +88,7 @@ namespace LibraryManagementSystem
 			if (!dataReader.HasRows)
 			{
 				dataReader.Close();
-                Console.WriteLine("NO RECORDS IN DB");
+                Console.WriteLine("NO BOOKS IN LIBRARY\n");
 				return;
             }
 			dataReader.Close();
@@ -95,21 +100,9 @@ namespace LibraryManagementSystem
 			} while (CheckBook(bookId));
 
 			//get data for update operation
-			do
-			{
-				Console.WriteLine("Enter valid book title < 20 chars");
-				Title = Console.ReadLine();
-			} while (string.IsNullOrEmpty(Title) || Title.Length > 20);//get title
-			do
-			{
-				Console.WriteLine("Enter valid book author < 20 chars");
-				Author = Console.ReadLine();
-			} while (string.IsNullOrEmpty(Author) || Author.Length > 20);//get author
+			GetDetails();
 
-			Console.WriteLine("Enter the available copies");
-			int copies = Convert.ToInt32(Console.ReadLine());
-
-			var updateQuery = $"UPDATE books SET title = '{Title}', author = '{Author}', availableCopies = '{copies}' WHERE id = {bookId}";
+			var updateQuery = $"UPDATE books SET title = '{Title}', author = '{Author}', availableCopies = '{Copies}' WHERE id = {bookId}";
 			SqlCommand UpdateCommand = new SqlCommand(updateQuery, _connection);
 			UpdateCommand.ExecuteNonQuery();
 			Console.WriteLine("Book ID: {0} details updated", bookId);
@@ -124,7 +117,7 @@ namespace LibraryManagementSystem
 			if (!dataReader.HasRows)
 			{
 				dataReader.Close();
-				Console.WriteLine("NO RECORDS IN DB");
+				Console.WriteLine("NO BOOKS IN LIBRARY\n");
 				return;
 			}
 			dataReader.Close();
@@ -148,7 +141,7 @@ namespace LibraryManagementSystem
 			SqlCommand sqlCommand = new SqlCommand(GetQuery, _connection);
 
 			SqlDataReader reader = sqlCommand.ExecuteReader();
-			if (!reader.HasRows)
+			if (!reader.HasRows)//(no rows-> false)
 			{
 				reader.Close();
 				Console.WriteLine("Book ID:{0} doesn't exists", bookId);
@@ -172,19 +165,19 @@ namespace LibraryManagementSystem
 			//check for rows
 			if (!sqlDataReader.HasRows)
 			{
-                Console.WriteLine("NO RECORDS IN DB\n");
+                Console.WriteLine("NO BOOKS IN LIBRARY\n");
             }
 			else
 			{
 				int sl = 0;
 				StringBuilder stringBuilder = new StringBuilder();
-				stringBuilder.Append("-- Books In Library --").AppendLine();
+				stringBuilder.Append("-- Books In Library --\n").AppendLine();
 				while (sqlDataReader.Read())
 				{
 					sl += 1;
-					stringBuilder.Append($"Book ID: {sqlDataReader.GetValue(0)}")
+					stringBuilder.Append($"{sl}.Book ID: {sqlDataReader.GetValue(0)}")
 								.AppendLine()
-								.Append($"{sl}:Book Title:{sqlDataReader.GetValue(1)}")
+								.Append($"Book Title:{sqlDataReader.GetValue(1)}")
 								.AppendLine()
 								.Append($"Author: {sqlDataReader.GetValue(2)}")
 								.AppendLine()

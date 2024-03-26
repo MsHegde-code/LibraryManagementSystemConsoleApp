@@ -8,21 +8,34 @@ namespace LibraryManagementSystem
 	{
 		static void Main(string[] args)
 		{
+            Console.WriteLine("Application Started\n");
+            //get connectionString from the DB properties
+            var connectionString = Configure.connectionString;
 
-			//get connectionString from the DB properties
-			var connectionString = @"Data Source=MANIT;Initial Catalog=LibraryManagement;Integrated Security=True;Trust Server Certificate=True";
+            //connect to the db through the connString, this connection obj is used to perform db related operations
+            SqlConnection connection = new SqlConnection(connectionString);
 
-			//connect to the db through the connString, this connection obj is used to perform db related operations
-			SqlConnection connection = new SqlConnection(connectionString);
+            //handles db connections exception
+            try
+			{
+				//opens the db connection
+                connection.Open();
+            }catch (Exception ex)
+			{
+				Console.WriteLine(ex.ToString());
+			}
 
-			connection.Open();
-			Console.WriteLine("Connection Established");
-			
+			//DB initializer
+			var init = new DbInitializer(connection);
+			init.InitDb();
+			init.InitTable();
+
 			///
 			while(true)
 			{
-                Console.WriteLine("Main Menu\n1.Library\n2.Manage Member\n3.Borrow\n4.Exit\n");
-				int choice = Convert.ToInt32(Console.ReadLine());	
+                Console.WriteLine("\n** Main Menu **\n1.Library\n2.Manage Member\n3.Borrow or Return\n4.Exit App\n");
+                Console.WriteLine("Enter the choice");
+                int choice = Convert.ToInt32(Console.ReadLine());	
 				switch (choice)
 				{
 					case 1: var book = new CRUD_Book(connection);
@@ -34,7 +47,9 @@ namespace LibraryManagementSystem
 					case 3:	var borrow = new Borrower(connection);
 							borrow.DisplayMenu();
 							break;
-					case 4:	connection.Close();
+					case 4:
+							Console.WriteLine("Connection Closed");
+							connection.Close();
 							Environment.Exit(0);
 							break;
 					default: Console.WriteLine("enter valid choice");
