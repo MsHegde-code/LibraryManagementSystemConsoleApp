@@ -24,7 +24,7 @@ namespace LibraryManagementSystem
 		{
 			while(true)
 			{
-                Console.WriteLine("Enter choice\n1.Add new Book\n2.Update Book\n3.Delete Book\n4.Display All Books\n5.Back to menu\n");
+                Console.WriteLine("\n** Manage Books **\n1.Add new Book\n2.Update Book\n3.Delete Book\n4.Display All Books\n5.Back to menu\nEnter the choice\n");
 				int choice = Convert.ToInt32(Console.ReadLine());
 				switch (choice)
 				{
@@ -88,7 +88,7 @@ namespace LibraryManagementSystem
 			if (!dataReader.HasRows)
 			{
 				dataReader.Close();
-                Console.WriteLine("NO BOOKS IN LIBRARY\n");
+                Console.WriteLine("\nNO BOOKS IN LIBRARY");
 				return;
             }
 			dataReader.Close();
@@ -117,7 +117,7 @@ namespace LibraryManagementSystem
 			if (!dataReader.HasRows)
 			{
 				dataReader.Close();
-				Console.WriteLine("NO BOOKS IN LIBRARY\n");
+				Console.WriteLine("\nNO BOOKS IN LIBRARY");
 				return;
 			}
 			dataReader.Close();
@@ -165,7 +165,7 @@ namespace LibraryManagementSystem
 			//check for rows
 			if (!sqlDataReader.HasRows)
 			{
-                Console.WriteLine("NO BOOKS IN LIBRARY\n");
+                Console.WriteLine("\nNO BOOKS IN LIBRARY");
             }
 			else
 			{

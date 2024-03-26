@@ -19,7 +19,7 @@ namespace LibraryManagementSystem
 		{
             while(true)
 			{
-				Console.WriteLine("Enter choice\n1.Borrow\n2.Return\n3.Display Borrowed\n4.Back to menu\n");
+				Console.WriteLine("\n** Borrow or Return **\n1.Borrow\n2.Return\n3.Display Borrowed\n4.Back to menu\nEnter the choice\n");
 				int choice = Convert.ToInt32(Console.ReadLine());
 				switch (choice)
 				{
@@ -41,6 +41,19 @@ namespace LibraryManagementSystem
 
 		private void BorrowBook()
 		{
+			//before borrowing check books exists in Lib
+			var query = $"SELECT COUNT(*) FROM books";
+			SqlCommand QueryCommand = new SqlCommand(query, _connection);
+			int  count = Convert.ToInt32(QueryCommand.ExecuteScalar());
+			if (count == 0)
+			{
+                //no books in lib
+                Console.WriteLine("\nNO BOOKS IN THE LIBRARY");
+				return;
+            }
+
+			//perform borrow
+
 			int Mid, BId, bookCopies=0;
 			var MemberObj = new CRUD_Member(_connection);
 			do
@@ -52,6 +65,7 @@ namespace LibraryManagementSystem
 			var BookObj = new CRUD_Book(_connection);
 			//display available books
 			BookObj.DisplayAllBooks();
+
 			do
 			{
 				Console.WriteLine("enter valid Book Id");
@@ -83,12 +97,21 @@ namespace LibraryManagementSystem
 			SqlCommand updateCommand = new SqlCommand(UpdateQuery, _connection);
 			updateCommand.ExecuteNonQuery();
 
-			Console.WriteLine("Book is Borrowed");
+			Console.WriteLine($"Book ID:{BId} is Borrowed");
 		}
 
 		private void ReturnBook()
 		{
-			int mid, copies=0;
+            var checkBorrowedRecords = $"SELECT COUNT(*) FROM {Configure.BorrowedTable}";
+            SqlCommand checkCommand = new SqlCommand(checkBorrowedRecords, _connection);
+            int count = Convert.ToInt32(checkCommand.ExecuteScalar());
+            if (count == 0)
+            {
+                //no records
+                Console.WriteLine("NO BOOKS BORROWED FROM LIBRARY");
+				return;
+            }
+            int mid, copies=0;
 			//get list of members from borrowed table
 			var memberList = new List<int>();
 			var memberQuery = $"SELECT member_Id FROM borrowed";
@@ -140,6 +163,7 @@ namespace LibraryManagementSystem
 			reader.Close();
             Console.WriteLine(stringBuilder.ToString());
 
+			//need to get bookID input based on borrowed bookID
 			do
 			{
 				Console.WriteLine("Enter valid book ID");
@@ -173,6 +197,7 @@ namespace LibraryManagementSystem
 
 		private void DisplayBorrowed()
 		{
+			//before displaying, check borrowed has rows
 			var checkBorrowedRecords = $"SELECT COUNT(*) FROM {Configure.BorrowedTable}";
 			SqlCommand checkCommand = new SqlCommand(checkBorrowedRecords, _connection);
 			int count = Convert.ToInt32(checkCommand.ExecuteScalar());

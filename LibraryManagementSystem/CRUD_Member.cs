@@ -17,7 +17,7 @@ namespace LibraryManagementSystem
 		{
 			while(true)
 			{
-                Console.WriteLine("Enter Choice\n1.Add new Member\n2.Update member\n3.Delete member\n4.Display all members\n5.Back to menu");
+                Console.WriteLine("\n** Manage Members **\n1.Add new Member\n2.Update member\n3.Delete member\n4.Display all members\n5.Back to menu\nEnter the Choice\n");
 				var choice = Convert.ToInt32(Console.ReadLine());
 				switch (choice)
 				{
