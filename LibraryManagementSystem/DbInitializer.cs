@@ -62,8 +62,9 @@ namespace LibraryManagementSystem
 
             var borrowedCreateQuery = $@"CREATE TABLE {Configure.BorrowedTable}(
                                         id INT IDENTITY(1,1) PRIMARY KEY,
-                                        member_Id INT,
-                                        book_Id INT,
+                                        member_Id INT NOT NULL,
+                                        book_Id INT NOT NULL,
+                                        borrowedCopies INT NOT NULL,
                                         FOREIGN KEY (member_Id) REFERENCES {Configure.MembersTable}(id),
                                         FOREIGN KEY (book_Id) REFERENCES {Configure.BooksTable}(id));";
 

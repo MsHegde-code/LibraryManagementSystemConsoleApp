@@ -7,6 +7,8 @@ namespace LibraryManagementSystem
 	{
         private int member_Id { get; set; }
         private int book_Id { get; set; }
+
+		private int BorrowedCopies { get; set; }
 		private readonly SqlConnection _connection;
         public Borrower(SqlConnection connection)
         {
@@ -73,7 +75,7 @@ namespace LibraryManagementSystem
 			} while (BookObj.CheckBook(BId)); //check bookId
 
 			//get available copies of books
-			var getQuery = $"SELECT availableCopies FROM books WHERE id = {BId}";
+			var getQuery = $"SELECT availableCopies FROM {Configure.BooksTable} WHERE id = {BId}";
 			SqlCommand getCommand = new SqlCommand(getQuery, _connection);
 			SqlDataReader reader = getCommand.ExecuteReader();
 			if (reader.Read())
@@ -87,10 +89,26 @@ namespace LibraryManagementSystem
 				return;
 			}
 			reader.Close();
-            //insert borrower table
-            var insertQuery = $"INSERT INTO borrowed(member_Id,book_Id) VALUES ('{Mid}','{BId}')";
-			SqlCommand insertCommand = new SqlCommand(insertQuery, _connection);
-			insertCommand.ExecuteNonQuery();
+
+			//get the borrowed copies
+			var borrowedCopiesQuery = $"SELECT borrowedCopies FROM {Configure.BorrowedTable} WHERE member_Id = '{Mid}' AND book_Id = {BId}";
+			SqlCommand borrowedCopiesCommand = new SqlCommand(borrowedCopiesQuery, _connection);
+			BorrowedCopies = Convert.ToInt32(borrowedCopiesCommand.ExecuteScalar());
+			if(BorrowedCopies<= 0)
+			{
+                //insert to borrower table
+                //insert new record, Borrowed book for first time
+                var insertQuery = $"INSERT INTO borrowed(member_Id,book_Id,BorrowedCopies) VALUES ('{Mid}','{BId}','{BorrowedCopies+1}')";
+                SqlCommand insertCommand = new SqlCommand(insertQuery, _connection);
+                insertCommand.ExecuteNonQuery();
+            }
+			else
+			{
+				//update the borrowed Copies value, do not insert another record
+				var UpdateCopiesBorrowed = $"UPDATE {Configure.BorrowedTable} SET borrowedCopies = '{BorrowedCopies+1}' WHERE member_Id = {Mid} AND book_Id = '{BId}'";
+				SqlCommand UpdateCopiesCommand = new SqlCommand(UpdateCopiesBorrowed, _connection);
+				UpdateCopiesCommand.ExecuteNonQuery();
+			}
             
 			//update the available quantity of the book borrowed
 			var UpdateQuery = $"UPDATE books SET availableCopies = '{bookCopies-1}' WHERE id = {BId}";
@@ -148,15 +166,17 @@ namespace LibraryManagementSystem
 			//display the books which he borrowed
 
 			var booksList = new List<int>();
-			var getQuery = $"SELECT title, book_Id FROM books AS B, borrowed WHERE B.id = book_Id AND member_Id = {mid}";
+			var getQuery = $"SELECT title, book_Id, BorrowedCopies FROM books AS B, borrowed WHERE B.id = book_Id AND member_Id = {mid}";
 			SqlCommand getCommand = new SqlCommand(getQuery, _connection);
 			SqlDataReader reader = getCommand.ExecuteReader();
 				
 			StringBuilder stringBuilder = new StringBuilder();
-			stringBuilder.Append($"Borrowed Books by Member ID: {mid}").AppendLine();
+			stringBuilder.Append($"\nBorrowed Books by Member ID: {mid}").AppendLine();
 			while(reader.Read())
 			{
 				stringBuilder.Append($"Book Title - {reader.GetValue(0)} : Book ID - {reader.GetValue(1)}")
+					.AppendLine()
+					.Append($"Borrowed Copies: {reader.GetValue(2)}")
 					.AppendLine();
 				booksList.Add(Convert.ToInt32(reader.GetValue(1)));
 			}
@@ -170,10 +190,27 @@ namespace LibraryManagementSystem
 				book_Id = Convert.ToInt32(Console.ReadLine());
 			} while (!booksList.Contains(book_Id));
 
-			//remove from borrowed table
-			var deleteQuery = $"DELETE FROM borrowed WHERE book_Id = '{book_Id}' AND member_Id = '{mid}'";
-			SqlCommand deleteCommand = new SqlCommand(deleteQuery, _connection);
-			deleteCommand.ExecuteNonQuery();
+			//before removing the record, check the number of borrowed copies
+			var checkBorrowedCopies = $"SELECT borrowedCopies FROM {Configure.BorrowedTable} WHERE member_Id = '{mid}' AND book_Id = '{book_Id}'";
+			SqlCommand BorrowedCopiesCommand = new SqlCommand(checkBorrowedCopies, _connection);
+			int BorrowedCopies = Convert.ToInt32(BorrowedCopiesCommand.ExecuteScalar());
+
+			if(BorrowedCopies > 1)
+			{
+				//decrement a single copy count from the record
+				var UpdateBorrowedCopies = $"UPDATE {Configure.BorrowedTable} SET BorrowedCopies = {BorrowedCopies-1} WHERE member_Id = '{mid}' AND book_Id = '{book_Id}'";
+				SqlCommand borrowCopiesCommand = new SqlCommand(UpdateBorrowedCopies , _connection);
+				borrowCopiesCommand.ExecuteNonQuery();
+                Console.WriteLine("One Copy of Book ID: {0} is returned ", book_Id);
+            }
+			else
+			{
+				//there is only one copy of the book, when returned delete the record
+                //remove from borrowed table
+                var deleteQuery = $"DELETE FROM borrowed WHERE book_Id = '{book_Id}' AND member_Id = '{mid}'";
+                SqlCommand deleteCommand = new SqlCommand(deleteQuery, _connection);
+                deleteCommand.ExecuteNonQuery();
+            }
 
 			//get availableCopies of the book
 			var Query = $"SELECT availableCopies FROM books WHERE id = '{book_Id}'";
@@ -228,7 +265,7 @@ namespace LibraryManagementSystem
                 StringBuilder stringBuilder = new StringBuilder();
                 foreach (var mid in membersList)
                 {
-                    var borrowQuery = $"SELECT title, book_Id FROM books AS B, borrowed WHERE B.id = book_Id AND member_Id = '{mid}'";
+                    var borrowQuery = $"SELECT title, book_Id, BorrowedCopies FROM books AS B, borrowed WHERE B.id = book_Id AND member_Id = '{mid}'";
 
                     SqlCommand BorrowCommand = new SqlCommand(borrowQuery, _connection);
                     SqlDataReader sqlData = BorrowCommand.ExecuteReader();
@@ -246,7 +283,9 @@ namespace LibraryManagementSystem
                         stringBuilder.Append($"Book Title: {sqlData.GetValue(0)}")
                         .Append(" : ")
                         .Append($"Book ID: {sqlData.GetValue(1)}")
-                        .AppendLine();
+                        .AppendLine()
+						.Append($"-> Borrowed Copies: {sqlData.GetValue(2)}")
+						.AppendLine();
                     }
                     stringBuilder.AppendLine()
                         .Append("-- ** --")
