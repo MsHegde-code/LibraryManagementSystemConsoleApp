@@ -102,6 +102,11 @@ namespace LibraryManagementSystem
                 SqlCommand insertCommand = new SqlCommand(insertQuery, _connection);
                 insertCommand.ExecuteNonQuery();
             }
+			else if(BorrowedCopies == 2)
+			{
+                Console.WriteLine("Maximum Borrow Limit reached !! Cannot Borrow");
+				return;
+            }
 			else
 			{
 				//update the borrowed Copies value, do not insert another record
@@ -174,8 +179,8 @@ namespace LibraryManagementSystem
 			stringBuilder.Append($"\nBorrowed Books by Member ID: {mid}").AppendLine();
 			while(reader.Read())
 			{
-				stringBuilder.Append($"Book Title - {reader.GetValue(0)} : Book ID - {reader.GetValue(1)}")
-					.AppendLine()
+				stringBuilder.Append($"->Book Title - {reader.GetValue(0)} : Book ID - {reader.GetValue(1)}")
+					.Append(" : ")
 					.Append($"Borrowed Copies: {reader.GetValue(2)}")
 					.AppendLine();
 				booksList.Add(Convert.ToInt32(reader.GetValue(1)));
@@ -210,7 +215,9 @@ namespace LibraryManagementSystem
                 var deleteQuery = $"DELETE FROM borrowed WHERE book_Id = '{book_Id}' AND member_Id = '{mid}'";
                 SqlCommand deleteCommand = new SqlCommand(deleteQuery, _connection);
                 deleteCommand.ExecuteNonQuery();
-            }
+				Console.WriteLine("Book ID: {0} is returned", book_Id);
+
+			}
 
 			//get availableCopies of the book
 			var Query = $"SELECT availableCopies FROM books WHERE id = '{book_Id}'";
@@ -226,9 +233,6 @@ namespace LibraryManagementSystem
 			var updateQuery = $"UPDATE books SET availableCopies = {copies+1} WHERE id = {book_Id}";
 			SqlCommand updateCommand = new SqlCommand(updateQuery, _connection);
 			updateCommand.ExecuteNonQuery();
-
-            Console.WriteLine("Book ID: {0} is returned",book_Id);
-
 
         }
 
@@ -280,11 +284,11 @@ namespace LibraryManagementSystem
                     //print book id and title for each member id
                     while (sqlData.Read())
                     {
-                        stringBuilder.Append($"Book Title: {sqlData.GetValue(0)}")
+                        stringBuilder.Append($"->Book Title: {sqlData.GetValue(0)}")
                         .Append(" : ")
                         .Append($"Book ID: {sqlData.GetValue(1)}")
-                        .AppendLine()
-						.Append($"-> Borrowed Copies: {sqlData.GetValue(2)}")
+                        .Append(" : ")
+						.Append($"Borrowed Copies: {sqlData.GetValue(2)}")
 						.AppendLine();
                     }
                     stringBuilder.AppendLine()
